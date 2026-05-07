@@ -66,7 +66,7 @@ function App() {
       <nav className="navbar">
         <div className="nav-brand">
           <img src={pwLogo} alt="PW" className="brand-logo" />
-          <span className="brand-text">ILE</span>
+          <span className="brand-text">ILH</span>
         </div>
         <div className="nav-links">
           <a href="#simulations">Simulations</a>
@@ -81,7 +81,7 @@ function App() {
       <section className="hero" id="about">
         <h1 className="hero-title">
           <span className="hero-title-line">Interactive Learning</span>
-          <span className="gradient-text">element.</span>
+          <span className="gradient-text">Hub.</span>
         </h1>
         <p className="hero-subtitle">
           Learn by doing. Explore chemistry, physics, and biology through

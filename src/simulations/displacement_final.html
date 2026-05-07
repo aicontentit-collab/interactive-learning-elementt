@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Interactive learning element</title>
+  <title>Displacement Reaction- Iron and CuSo4</title>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="preload" as="video" type="video/mp4"
     href="https://www.image2url.com/r2/default/videos/1777382292332-cad7033d-f41c-42cf-bb23-eb893107f294.mp4" />
@@ -271,9 +271,11 @@
 
     .thought-cloud .qmark {
       font-family: 'Caveat', cursive;
-      font-size: clamp(1.6rem, 5vmin, 2.6rem);
+      font-size: clamp(1rem, 4.5vmin, 2.4rem);
       font-weight: 700;
       color: #1a1a2e;
+      line-height: 1;
+      display: block;
       line-height: 1;
       animation: qBounce 1.2s ease-in-out infinite;
     }
@@ -384,66 +386,157 @@
       top: 57%;
       bottom: 2%;
       background: #fff;
-      border: none;
-      border-radius: 0;
-      box-shadow: none;
       z-index: 4;
       display: flex;
       flex-direction: column;
-      align-items: stretch;
       justify-content: center;
-      padding: 3% 6%;
-      gap: 6%;
+      padding: 2.5% 5%;
+      gap: clamp(.4rem, 3.5%, .8rem);
     }
 
     .mcq-q {
-      font-size: clamp(.82rem, 2.8vw, 1rem);
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: clamp(.82rem, 2.9vw, 1.05rem);
       font-weight: 700;
-      color: #1e293b;
-      text-align: center;
-      line-height: 1.4;
+      color: #0f172a;
+      line-height: 1.35;
+    }
+
+    .mcq-q-icon {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.7em;
+      height: 1.7em;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1a73e8 0%, #6366f1 100%);
+      color: #fff;
+      font-weight: 700;
+      font-size: .85em;
+      box-shadow: 0 2px 6px rgba(26, 115, 232, .25);
     }
 
     .mcq-opts {
       display: flex;
       flex-direction: column;
+      gap: clamp(.35rem, 3%, .65rem);
       width: 100%;
-      gap: 6%;
     }
 
     .mcq-btn {
-      font-family: 'Caveat', cursive;
-      font-size: clamp(.78rem, 2.7vw, .95rem);
-      font-weight: 600;
-      padding: 3.5% 5%;
-      border-radius: 10px;
-      border: 1.5px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: clamp(.5rem, 3.5%, .9rem);
+      padding: clamp(.5rem, 3.2%, .85rem) clamp(.7rem, 4%, 1.1rem);
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
       background: #fff;
-      color: #000000;
+      color: #1e293b;
       cursor: pointer;
       text-align: left;
-      transition: background .2s, border-color .2s, transform .15s;
-      line-height: 1.3;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: clamp(.78rem, 2.7vw, .95rem);
+      font-weight: 500;
+      line-height: 1.35;
+      min-height: 44px;
+      transition: border-color .2s, background .2s, box-shadow .2s, transform .15s;
     }
 
-    .mcq-btn:hover {
-      background: #eff6ff;
+    .mcq-letter {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.85em;
+      height: 1.85em;
+      border-radius: 50%;
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 700;
+      font-size: .9em;
+      transition: background .2s, color .2s;
+    }
+
+    .mcq-text {
+      flex: 1;
+    }
+
+    .mcq-result-icon {
+      flex-shrink: 0;
+      width: 1.4em;
+      height: 1.4em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1em;
+      opacity: 0;
+      transform: scale(.6);
+      transition: opacity .25s, transform .25s;
+    }
+
+    .mcq-btn:hover:not(.wrong-flash):not(.correct-flash) {
       border-color: #93c5fd;
-      transform: translateX(3px);
+      background: #eff6ff;
+      box-shadow: 0 3px 10px rgba(26, 115, 232, .12);
+    }
+
+    .mcq-btn:hover:not(.wrong-flash):not(.correct-flash) .mcq-letter {
+      background: #1a73e8;
+      color: #fff;
+    }
+
+    .mcq-btn:active:not(.wrong-flash):not(.correct-flash) {
+      transform: scale(.985);
     }
 
     #optA.wrong-flash {
-      background: #fee2e2;
-      border-color: #fca5a5;
+      background: #fef2f2;
+      border-color: #f87171;
       color: #991b1b;
       animation: shake .4s ease;
     }
 
+    #optA.wrong-flash .mcq-letter {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    #optA.wrong-flash .mcq-result-icon {
+      color: #ef4444;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    #optA.wrong-flash .mcq-result-icon::before {
+      content: '\2715';
+    }
+
     #optB.correct-flash {
-      background: #dcfce7;
+      background: #f0fdf4;
       border-color: #4ade80;
       color: #166534;
-      font-weight: 700;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(34, 197, 94, .18);
+    }
+
+    #optB.correct-flash .mcq-letter {
+      background: #22c55e;
+      color: #fff;
+    }
+
+    #optB.correct-flash .mcq-result-icon {
+      color: #22c55e;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    #optB.correct-flash .mcq-result-icon::before {
+      content: '\2713';
     }
 
     @keyframes shake {
@@ -463,24 +556,31 @@
     }
 
     #mcq-feedback {
-      font-size: clamp(.7rem, 2.4vw, .88rem);
-      font-weight: 700;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: clamp(.72rem, 2.5vw, .92rem);
+      font-weight: 600;
       text-align: center;
-      min-height: 1em;
+      min-height: 1.2em;
+      padding: .35rem .7rem;
+      border-radius: 10px;
       opacity: 0;
-      transition: opacity .3s;
+      transform: translateY(4px);
+      transition: opacity .3s, transform .3s;
     }
 
     #mcq-feedback.show {
-      opacity: 1
+      opacity: 1;
+      transform: translateY(0);
     }
 
     #mcq-feedback.correct {
-      color: #15803d
+      color: #15803d;
+      background: #f0fdf4;
     }
 
     #mcq-feedback.wrong {
-      color: #b91c1c
+      color: #b91c1c;
+      background: #fef2f2;
     }
 
     /* ════════════════════════════
@@ -561,15 +661,209 @@
     #result-text.correct {
       color: #15803d
     }
+
+    /* Splash screen — title card + play button shown until the user clicks
+       Play. The click satisfies browser autoplay policies (audio.play()
+       outside a fresh user gesture is silently blocked). */
+    #sim-splash {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, #ffffff 0%, #f5f0eb 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      z-index: 100;
+      padding: 1.5rem;
+      transition: opacity .4s ease;
+    }
+
+    #sim-splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .splash-thumb {
+      width: 55%;
+      max-width: 240px;
+      aspect-ratio: 1/1;
+      object-fit: contain;
+      background: #fff;
+      border-radius: 16px;
+      border: 1.5px solid #e0d8cf;
+      box-shadow: 0 6px 22px rgba(0, 0, 0, .08);
+    }
+
+    .splash-title {
+      font-family: 'Caveat', cursive;
+      font-size: clamp(1.5rem, 5vw, 2.2rem);
+      font-weight: 700;
+      color: #1a1a2e;
+      text-align: center;
+      line-height: 1.1;
+      margin: 0;
+    }
+
+    .splash-subtitle {
+      font-size: clamp(.85rem, 2.5vw, 1rem);
+      color: #7a7068;
+      text-align: center;
+      margin: 0;
+    }
+
+    .splash-play-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+      padding: .85rem 2rem;
+      margin-top: .4rem;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 100px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(26, 115, 232, .3);
+      transition: background .2s ease, transform .15s ease, box-shadow .2s ease;
+      min-width: 170px;
+      justify-content: center;
+    }
+
+    .splash-play-btn:hover:not(:disabled) {
+      background: #1557b0;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(26, 115, 232, .35);
+    }
+
+    .splash-play-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .splash-play-btn:disabled {
+      background: #c8bfb5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .splash-play-btn .splash-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2.5px solid rgba(255, 255, 255, .35);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: simSpin .9s linear infinite;
+    }
+
+    .splash-status {
+      font-family: 'Caveat', cursive;
+      font-size: clamp(1.1rem, 3.5vw, 1.5rem);
+      font-weight: 600;
+      color: #1a1a2e;
+      min-height: 1.2em;
+    }
+
+    @keyframes simSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Exit button — top-left circle, mirror of #btn-reset on the right. */
+    #btn-exit {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 50%;
+      border: 2px solid #d0ccc6;
+      background: rgba(255, 255, 255, 0.88);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      color: #999;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .10);
+      transition: border-color .2s, color .2s;
+    }
+
+    #btn-exit:hover {
+      border-color: #1a73e8;
+      color: #1a73e8;
+    }
+
+    /* Mobile (max 640px) — tighter padding, smaller chrome. */
+    @media (max-width: 640px) {
+      body {
+        padding: 6px 4px 14px;
+        gap: 6px;
+      }
+
+      #title {
+        font-size: 1.1rem;
+      }
+
+      #instruction {
+        font-size: .8rem;
+      }
+
+      #sim-wrap {
+        width: min(96vw, 520px);
+      }
+
+      #btn-reset,
+      #btn-exit {
+        width: 38px;
+        height: 38px;
+        top: 10px;
+      }
+
+      #btn-reset {
+        right: 10px;
+      }
+
+      #btn-exit {
+        left: 10px;
+      }
+
+      .splash-thumb {
+        width: 48%;
+        max-width: 180px;
+      }
+
+      .splash-play-btn {
+        padding: .8rem 1.6rem;
+        font-size: 1rem;
+        min-width: 150px;
+      }
+    }
   </style>
 </head>
 
 <body>
 
-  <div id="title">Interactive learning element</div>
+  <div id="title">Displacement Reaction</div>
   <div id="instruction" id="instr">Can iron steal the blue color from copper sulfate?</div>
 
   <div id="sim-wrap">
+
+    <!-- Splash screen — title card + Play button. Hidden once the user
+         clicks Play (satisfies browser autoplay policy). -->
+    <div id="sim-splash">
+      <img id="splash-thumb" class="splash-thumb" alt="" aria-hidden="true" />
+      <button id="sim-start-btn" class="splash-play-btn" type="button" disabled>
+        <span class="splash-spinner" id="splash-btn-spinner"></span>
+        <span id="splash-btn-label">Loading…</span>
+      </button>
+      <div class="splash-status" id="splash-status">Preparing audio…</div>
+    </div>
 
     <!-- ══ FRAME 1: 1.png — question + baked Next btn ══ -->
     <div class="frame active" id="frame1">
@@ -623,10 +917,21 @@
         alt="Frame 4" />
       <!-- white panel covers baked MCQ text, replaces with interactive version -->
       <div id="f4-mcq-panel">
-        <div class="mcq-q"> Wait, why is the nail brown now?</div>
+        <div class="mcq-q">
+          <span class="mcq-q-icon" aria-hidden="true">?</span>
+          <span>Wait, why is the nail brown now?</span>
+        </div>
         <div class="mcq-opts">
-          <button class="mcq-btn" id="optA" onclick="checkAnswer('A')">A. It got rusted.</button>
-          <button class="mcq-btn" id="optB" onclick="checkAnswer('B')">B. A layer of Copper deposited on it.</button>
+          <button class="mcq-btn" id="optA" onclick="checkAnswer('A')">
+            <span class="mcq-letter">A</span>
+            <span class="mcq-text">It got rusted.</span>
+            <span class="mcq-result-icon" aria-hidden="true"></span>
+          </button>
+          <button class="mcq-btn" id="optB" onclick="checkAnswer('B')">
+            <span class="mcq-letter">B</span>
+            <span class="mcq-text">A layer of Copper deposited on it.</span>
+            <span class="mcq-result-icon" aria-hidden="true"></span>
+          </button>
         </div>
         <div id="mcq-feedback"></div>
       </div>
@@ -641,6 +946,12 @@
 
   </div><!-- /sim-wrap -->
 
+  <button id="btn-exit" onclick="exitSim()" title="Exit simulation" aria-label="Exit">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  </button>
   <button id="btn-reset" onclick="resetSim()" title="Restart simulation" aria-label="Restart">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
       stroke-linecap="round" stroke-linejoin="round">
@@ -758,6 +1069,10 @@
     };
 
     const btnNext = document.getElementById('btn-next');
+    // Hide Next until the user clicks Play and showFrame() decides whether
+    // the current frame needs it. Without this it's visible alongside the
+    // splash screen on initial load.
+    btnNext.style.display = 'none';
     const instrEl = document.getElementById('instruction');
     const resultEl = document.getElementById('result-text');
     const frames = document.querySelectorAll('.frame');
@@ -913,10 +1228,63 @@
     window.resetSim = resetSim;
 
     // Pre-fetch every narration clip in parallel the moment the page loads.
-    // By the time the user reaches each frame the audio is already cached.
     prefetchAll(Object.values(NARRATION));
 
-    showFrame(1, 1000);
+    // Don't show the simulation until Frame-1 narration is buffered enough
+    // to play through without stalling — otherwise visuals run 10-15s ahead
+    // of audio. Other clips keep loading in the background.
+    function waitForAudioReady(url, timeoutMs = 20000) {
+      return new Promise(resolve => {
+        if (!url) return resolve();
+        const audio = _audioCache.get(url);
+        if (!audio) return resolve();
+        // readyState 4 = HAVE_ENOUGH_DATA (can play through to end)
+        if (audio.readyState >= 4) return resolve();
+        let done = false;
+        const finish = () => { if (!done) { done = true; resolve(); } };
+        audio.addEventListener('canplaythrough', finish, { once: true });
+        audio.addEventListener('error', finish, { once: true });
+        // Safety: don't block the user forever if the network is dead.
+        setTimeout(finish, timeoutMs);
+      });
+    }
+
+    // Use the Frame-1 baked image as the splash thumbnail.
+    const f1Img = document.querySelector('#frame1 img.fullimg');
+    const splashThumb = document.getElementById('splash-thumb');
+    if (f1Img && splashThumb) splashThumb.src = f1Img.src;
+
+    // Once Frame-1 audio is buffered, enable the Play button. The click
+    // gives audio.play() a fresh user gesture so autoplay isn't blocked.
+    waitForAudioReady(NARRATION[1]).then(() => {
+      const btn = document.getElementById('sim-start-btn');
+      const spin = document.getElementById('splash-btn-spinner');
+      const label = document.getElementById('splash-btn-label');
+      const status = document.getElementById('splash-status');
+      spin.style.display = 'none';
+      label.innerHTML = '&#9654;&nbsp; Play Simulation';
+      status.textContent = 'Ready to begin';
+      btn.disabled = false;
+      btn.addEventListener('click', () => {
+        document.getElementById('sim-splash').classList.add('hidden');
+        showFrame(1, 100);
+      }, { once: true });
+    });
+
+    // Exit closes the simulation tab when it was opened from the catalog
+    // (target=_blank); falls back to history.back() / homepage for users
+    // who landed here directly (e.g. mobile webview).
+    function exitSim() {
+      stopAudio();
+      try { window.close(); } catch (_) { /* ignore */ }
+      setTimeout(() => {
+        if (!window.closed) {
+          if (history.length > 1) history.back();
+          else window.location.href = '/';
+        }
+      }, 100);
+    }
+    window.exitSim = exitSim;
   </script>
 </body>
 
