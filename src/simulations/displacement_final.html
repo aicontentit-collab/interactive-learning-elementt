@@ -845,6 +845,36 @@
         font-size: 1rem;
         min-width: 150px;
       }
+
+      /* Tighten the MCQ on small screens — the panel only gets ~41% of a
+         square that's at most 90vw, so on a phone every spare pixel matters
+         and the feedback line was being clipped. */
+      #f4-mcq-panel {
+        padding: 1.5% 4%;
+        gap: clamp(.2rem, 2%, .45rem);
+      }
+
+      .mcq-q {
+        font-size: .8rem;
+        gap: .4rem;
+      }
+
+      .mcq-btn {
+        padding: .45rem .65rem;
+        min-height: 36px;
+        gap: .5rem;
+        font-size: .78rem;
+      }
+
+      .mcq-letter {
+        width: 1.6em;
+        height: 1.6em;
+      }
+
+      #mcq-feedback {
+        padding: .25rem .5rem;
+        font-size: .75rem;
+      }
     }
   </style>
 </head>
@@ -1168,7 +1198,7 @@
         clearTimeout(mcqWrongTimer);
         document.getElementById('optB').classList.add('correct-flash');
         fb.className = 'show correct';
-        fb.textContent = ' Sahi pakde.... Iron ne copper ko solution se hata diya!';
+        fb.textContent = 'Correct answer!';
         // Transition to the conclusion frame only after the correct-answer audio finishes.
         // If reset is pressed mid-audio, stopAudio() resolves the promise early
         // but cur will no longer be 5, so the transition is safely skipped.
@@ -1180,7 +1210,7 @@
         if (fb.classList.contains('show')) return;
         document.getElementById('optA').classList.add('wrong-flash');
         fb.className = 'show wrong';
-        fb.textContent = 'Not quite! Solution ka copper nail par deposit ho gaya.';
+        fb.textContent = 'Wrong answer';
         resultEl.textContent = 'Try again!';
         speakText(NARRATION.mcq_wrong, 0);
         mcqWrongTimer = setTimeout(() => {
