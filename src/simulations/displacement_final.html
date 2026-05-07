@@ -6,8 +6,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Displacement Reaction- Iron and CuSo4</title>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="preload" as="video" type="video/mp4"
-    href="https://www.image2url.com/r2/default/videos/1777382292332-cad7033d-f41c-42cf-bb23-eb893107f294.mp4" />
+  <!-- Hint to fetch the Frame-1 narration first so the splash unlocks fast.
+       Videos preload only metadata (see preload="metadata" on the elements). -->
+  <link rel="preload" as="audio" type="audio/mpeg" crossorigin
+    href="https://www.image2url.com/r2/default/audio/1778048358626-3a20ec82-2dab-4ee9-aa85-e18427642e77.mp3" />
   <style>
     *,
     *::before,
@@ -24,7 +26,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: center;
       padding: 14px 12px 22px;
       gap: 10px;
     }
@@ -270,9 +272,9 @@
     }
 
     .thought-cloud .qmark {
-      font-family: 'Caveat', cursive;
-      font-size: clamp(1rem, 4.5vmin, 2.4rem);
-      font-weight: 700;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: clamp(1.3rem, 6vmin, 2.4rem);
+      font-weight: 800;
       color: #1a1a2e;
       line-height: 1;
       display: block;
@@ -802,8 +804,8 @@
     /* Mobile (max 640px) — tighter padding, smaller chrome. */
     @media (max-width: 640px) {
       body {
-        padding: 6px 4px 14px;
-        gap: 6px;
+        padding: 14px 14px 22px;
+        gap: 8px;
       }
 
       #title {
@@ -815,7 +817,7 @@
       }
 
       #sim-wrap {
-        width: min(96vw, 520px);
+        width: min(90vw, 520px);
       }
 
       #btn-reset,
@@ -895,7 +897,7 @@
 
     <!-- ══ FRAME 3: video clip — advances to reaction frame on `ended` (or 8s safety timeout) ══ -->
     <div class="frame" id="frame-video">
-      <video id="frame-video-clip" class="fullimg" preload="auto"
+      <video id="frame-video-clip" class="fullimg" preload="metadata"
         src="https://www.image2url.com/r2/default/videos/1777382292332-cad7033d-f41c-42cf-bb23-eb893107f294.mp4"
         autoplay muted playsinline></video>
     </div>
@@ -907,7 +909,7 @@
            baked into the video. Played by startReaction() on entering cur=4. -->
       <video id="f3-frame-video" class="fullimg"
         src="https://www.image2url.com/r2/default/videos/1778147484569-8b0e28d8-69ce-4d1f-b088-f9b148208853.mp4" muted
-        playsinline preload="auto"></video>
+        playsinline preload="metadata"></video>
     </div>
 
     <!-- ══ FRAME 4: 4.png top visuals + interactive MCQ panel ══ -->
@@ -975,13 +977,16 @@
     const _audioCache = new Map();
 
     function prefetchAll(urls) {
-      urls.forEach(url => {
-        if (!url || _audioCache.has(url)) return;
-        const audio = new Audio();
-        audio.preload = 'auto';
-        audio.src = url;
-        _audioCache.set(url, audio);
-      });
+      urls.forEach(url => prefetchOne(url));
+    }
+
+    function prefetchOne(url) {
+      if (!url || _audioCache.has(url)) return null;
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audio.src = url;
+      _audioCache.set(url, audio);
+      return audio;
     }
 
     function stopAudio() {
@@ -1227,22 +1232,25 @@
     window.checkAnswer = checkAnswer;
     window.resetSim = resetSim;
 
-    // Pre-fetch every narration clip in parallel the moment the page loads.
-    prefetchAll(Object.values(NARRATION));
+    // Prioritize Frame-1 narration: load it alone first so it gets the full
+    // bandwidth, then kick off the rest. Without this they compete and the
+    // splash sits on "Loading…" much longer than necessary.
+    prefetchOne(NARRATION[1]);
 
-    // Don't show the simulation until Frame-1 narration is buffered enough
-    // to play through without stalling — otherwise visuals run 10-15s ahead
-    // of audio. Other clips keep loading in the background.
-    function waitForAudioReady(url, timeoutMs = 20000) {
+    // Wait for Frame-1 narration to be playable (readyState 3 = HAVE_FUTURE_DATA,
+    // canplay fires when enough is buffered to start). canplaythrough waits
+    // until the browser estimates the WHOLE clip can play without stalling,
+    // which is unnecessarily strict and adds 5-10s of perceived loading.
+    function waitForAudioReady(url, timeoutMs = 15000) {
       return new Promise(resolve => {
         if (!url) return resolve();
         const audio = _audioCache.get(url);
         if (!audio) return resolve();
-        // readyState 4 = HAVE_ENOUGH_DATA (can play through to end)
-        if (audio.readyState >= 4) return resolve();
+        if (audio.readyState >= 3) return resolve();
         let done = false;
         const finish = () => { if (!done) { done = true; resolve(); } };
-        audio.addEventListener('canplaythrough', finish, { once: true });
+        audio.addEventListener('canplay', finish, { once: true });
+        audio.addEventListener('loadeddata', finish, { once: true });
         audio.addEventListener('error', finish, { once: true });
         // Safety: don't block the user forever if the network is dead.
         setTimeout(finish, timeoutMs);
@@ -1257,6 +1265,10 @@
     // Once Frame-1 audio is buffered, enable the Play button. The click
     // gives audio.play() a fresh user gesture so autoplay isn't blocked.
     waitForAudioReady(NARRATION[1]).then(() => {
+      // Frame-1 audio is ready — kick off the rest in the background so
+      // they're cached by the time the user reaches each frame.
+      prefetchAll(Object.values(NARRATION));
+
       const btn = document.getElementById('sim-start-btn');
       const spin = document.getElementById('splash-btn-spinner');
       const label = document.getElementById('splash-btn-label');
