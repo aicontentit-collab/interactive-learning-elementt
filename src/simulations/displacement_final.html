@@ -971,9 +971,11 @@
 
     <!-- ══ FRAME 5: 5.png — equation fully baked in ══ -->
     <div class="frame" id="frame5">
-      <img class="fullimg"
-        src="https://www.image2url.com/r2/default/images/1778148447088-36661421-048a-4ed6-ad8d-89e7404a846f.png"
-        alt="Frame 5" />
+      <!-- Final concept-reveal video — has its own baked-in narration, so
+           NARRATION[6] is set to null. Played by showFrame(6) on entry. -->
+      <video id="f5-frame-video" class="fullimg"
+        src="https://www.image2url.com/r2/default/videos/1778333681336-cfaf23f4-73fb-47bf-88c5-dedd0c1ac0e8.mp4"
+        playsinline preload="metadata"></video>
     </div>
 
   </div><!-- /sim-wrap -->
@@ -1098,7 +1100,10 @@
       3: "https://www.image2url.com/r2/default/audio/1778048448204-614af649-c666-444f-8f89-0f64c20fce20.mp3",
       4: null,
       5: "https://www.image2url.com/r2/default/audio/1778048492697-ff74535c-0ff6-4f39-bc47-70f82a10125c.mp3",
-      6: "https://www.image2url.com/r2/default/audio/1778048617354-c93c2483-32ef-4bb1-8019-3c945c889634.mp3",
+      6: null, // narration is baked into the cur=6 video (#f5-frame-video)
+      // Observation narration plays after the cur=4 video ends —
+      // "Ruko, yahan ek interesting change hua hai…"
+      obs: "https://www.image2url.com/r2/default/audio/1778219793784-1fbf9812-823c-4d69-b92b-bbfccda843ea.mp3",
       mcq_correct: "https://www.image2url.com/r2/default/audio/1778048565008-0914653c-110e-4215-9e5f-b8ce9d34bbd8.mp3",
       mcq_wrong: "https://www.image2url.com/r2/default/audio/1778048594568-5dc01d84-eb91-4bf9-b86e-de4a27d3e4f6.mp3",
     };
@@ -1139,6 +1144,15 @@
           setTimeout(() => setStage('stage-3'), speakDelay + F1_THINK2_MS),
           setTimeout(() => setStage('stage-4'), speakDelay + F1_NEXT_MS),
         );
+      }
+
+      // cur=6 is a video with baked-in narration; play it from the start.
+      if (n === 6) {
+        const v = document.getElementById('f5-frame-video');
+        if (v) {
+          try { v.currentTime = 0; } catch (_) { /* not yet seekable */ }
+          v.play().catch(() => { });
+        }
       }
 
       speakText(NARRATION[n], speakDelay);
@@ -1182,10 +1196,15 @@
     function startReaction() {
       // Frame 3 (cur=4) is now a single video — play it from the start.
       // All the dots / cover / mask choreography lives inside the video.
+      // When the video ends, follow up with the observation narration so
+      // the student hears the description of the colour change.
       clearTimeout(rxTimer);
       const v = document.getElementById('f3-frame-video');
       if (!v) return;
       try { v.currentTime = 0; } catch (_) { /* not yet seekable */ }
+      v.onended = () => {
+        if (cur === 4) speakText(NARRATION.obs, 200);
+      };
       v.play().catch(() => { });
     }
 
@@ -1206,19 +1225,16 @@
           if (cur === 5 && mcqDone) { cur = 6; showFrame(6, 0); }
         });
       } else {
-        // Prevent re-triggering while the wrong-answer feedback is visible
-        if (fb.classList.contains('show')) return;
+        // Wrong answer — explain why, then auto-advance to the conclusion
+        // frame just like the correct path. No "try again" loop.
+        mcqDone = true;
+        clearTimeout(mcqWrongTimer);
         document.getElementById('optA').classList.add('wrong-flash');
         fb.className = 'show wrong';
         fb.textContent = 'Wrong answer';
-        resultEl.textContent = 'Try again!';
-        speakText(NARRATION.mcq_wrong, 0);
-        mcqWrongTimer = setTimeout(() => {
-          document.getElementById('optA').classList.remove('wrong-flash');
-          fb.className = '';
-          fb.textContent = '';
-          resultEl.textContent = '';
-        }, 2400);
+        speakText(NARRATION.mcq_wrong, 0).then(() => {
+          if (cur === 5 && mcqDone) { cur = 6; showFrame(6, 0); }
+        });
       }
     }
 
@@ -1244,8 +1260,14 @@
       }
       const f3Video = document.getElementById('f3-frame-video');
       if (f3Video) {
+        f3Video.onended = null;
         f3Video.pause();
         f3Video.currentTime = 0;
+      }
+      const f5Video = document.getElementById('f5-frame-video');
+      if (f5Video) {
+        f5Video.pause();
+        f5Video.currentTime = 0;
       }
       const fb = document.getElementById('mcq-feedback');
       fb.textContent = '';
