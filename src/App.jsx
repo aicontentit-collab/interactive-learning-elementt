@@ -14,6 +14,17 @@ const simulations = [
     difficulty: "Beginner",
     duration: "10 min",
   },
+  {
+    id: "reflection",
+    title: "Reflection of Light",
+    subtitle: "Plane Mirror",
+    description:
+      "Drag the torch or slider and see the law of reflection — angle of incidence equals angle of reflection.",
+    href: "/src/simulations/reflection_of_light.html",
+    category: "Physics",
+    difficulty: "Beginner",
+    duration: "5 min",
+  },
 ];
 
 const CATEGORIES = ["All", "Chemistry", "Physics", "Biology"];

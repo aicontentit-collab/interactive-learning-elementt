@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Reflection of Light</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #f5f0eb;
+      font-family: 'Caveat', cursive;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 12px 22px;
+      gap: 10px;
+    }
+
+    #title {
+      font-size: clamp(1.2rem, 4vw, 1.8rem);
+      font-weight: 700;
+      color: #1a1a2e;
+      text-align: center;
+    }
+
+    #instruction {
+      font-size: clamp(.88rem, 3vw, 1.15rem);
+      color: #444;
+      text-align: center;
+      min-height: 1.5em;
+    }
+
+    #sim-wrap {
+      width: min(95vw, 720px);
+      background: #fff;
+      border-radius: 16px;
+      border: 2px solid #ddd;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .1);
+      position: relative;
+      overflow: hidden;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    #sim-canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 12px;
+      touch-action: none;
+    }
+
+    /* ── Slider controls ── */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .slider-label {
+      font-size: clamp(.95rem, 3vw, 1.2rem);
+      color: #666;
+      font-weight: 600;
+    }
+
+    .slider-row input[type=range] {
+      width: min(50vw, 240px);
+      accent-color: #e53e3e;
+      cursor: pointer;
+    }
+
+    .slider-val {
+      font-size: clamp(.95rem, 3vw, 1.2rem);
+      font-weight: 700;
+      color: #e53e3e;
+      min-width: 44px;
+      text-align: left;
+    }
+
+    /* ── Splash ── */
+    #sim-splash {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, #ffffff 0%, #f5f0eb 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.1rem;
+      z-index: 100;
+      padding: 1.5rem;
+      transition: opacity .4s ease;
+    }
+
+    #sim-splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .splash-thumb {
+      width: 60%;
+      max-width: 320px;
+      object-fit: contain;
+      background: #fff;
+      border-radius: 14px;
+      border: 1.5px solid #e0d8cf;
+      box-shadow: 0 6px 22px rgba(0, 0, 0, .08);
+    }
+
+    .splash-play-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+      padding: .85rem 2rem;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 100px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(26, 115, 232, .3);
+      transition: background .2s ease, transform .15s ease, box-shadow .2s ease;
+      min-width: 170px;
+      justify-content: center;
+    }
+
+    .splash-play-btn:hover:not(:disabled) {
+      background: #1557b0;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(26, 115, 232, .35);
+    }
+
+    .splash-play-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .splash-play-btn:disabled {
+      background: #c8bfb5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .splash-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2.5px solid rgba(255, 255, 255, .35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: simSpin .9s linear infinite;
+    }
+
+    @keyframes simSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .splash-status {
+      font-family: 'Caveat', cursive;
+      font-size: clamp(1.1rem, 3.5vw, 1.5rem);
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+
+    /* ── Exit / Reset buttons (fixed circular icons) ── */
+    #btn-exit,
+    #btn-reset {
+      position: fixed;
+      top: 14px;
+      z-index: 200;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 50%;
+      border: 2px solid #d0ccc6;
+      background: rgba(255, 255, 255, 0.88);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      color: #999;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .10);
+      transition: border-color .2s, color .2s, transform .4s ease;
+    }
+
+    #btn-exit {
+      left: 14px;
+    }
+
+    #btn-reset {
+      right: 14px;
+    }
+
+    #btn-exit:hover {
+      border-color: #1a73e8;
+      color: #1a73e8;
+    }
+
+    #btn-reset:hover {
+      border-color: #e05252;
+      color: #e05252;
+      transform: rotate(-200deg);
+    }
+
+    #btn-reset:active {
+      transform: rotate(-360deg);
+      transition-duration: .2s;
+    }
+
+    /* ── Mobile (≤640px) ── */
+    @media (max-width: 640px) {
+      body {
+        padding: 14px 14px 22px;
+        gap: 8px;
+      }
+
+      #title {
+        font-size: 1.1rem;
+      }
+
+      #instruction {
+        font-size: .8rem;
+      }
+
+      #sim-wrap {
+        width: min(94vw, 720px);
+        padding: 12px 10px;
+        gap: 12px;
+      }
+
+      #btn-exit,
+      #btn-reset {
+        width: 38px;
+        height: 38px;
+        top: 10px;
+      }
+
+      #btn-exit {
+        left: 10px;
+      }
+
+      #btn-reset {
+        right: 10px;
+      }
+
+      .slider-row input[type=range] {
+        width: min(58vw, 240px);
+      }
+
+      .splash-thumb {
+        width: 72%;
+        max-width: 280px;
+      }
+
+      .splash-play-btn {
+        padding: .8rem 1.6rem;
+        font-size: 1rem;
+        min-width: 150px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="title">Reflection of Light</div>
+  <div id="instruction">Drag the torch or use the slider to change the angle</div>
+
+  <div id="sim-wrap">
+    <!-- Splash — Play button gives a consistent "start" gesture across simulations -->
+    <div id="sim-splash">
+      <img id="splash-thumb" class="splash-thumb" alt="" aria-hidden="true" />
+      <div class="splash-status" id="splash-status">Loading…</div>
+      <button id="sim-start-btn" class="splash-play-btn" type="button" disabled>
+        <span class="splash-spinner" id="splash-spinner"></span>
+        <span id="splash-btn-label">Loading…</span>
+      </button>
+    </div>
+
+    <canvas id="sim-canvas" width="680" height="390"></canvas>
+
+    <div class="slider-row">
+      <span class="slider-label">Angle</span>
+      <input type="range" id="angle-slider" min="5" max="80" value="39" aria-label="Angle of incidence" />
+      <span class="slider-val" id="angle-val">39&deg;</span>
+    </div>
+  </div>
+
+  <button id="btn-exit" onclick="exitSim()" title="Exit simulation" aria-label="Exit">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  </button>
+  <button id="btn-reset" onclick="resetSim()" title="Reset simulation" aria-label="Reset">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+    </svg>
+  </button>
+
+  <script>
+    // ── Constants (ported from the React reference component) ──────────────
+    const TORCH_IMAGE_URL =
+      "https://image2url.com/r2/default/images/1775720118915-7b58d65b-f655-4592-a20a-9c6c6e4959b0.png";
+
+    const W = 680, H = 390;
+    const MIRROR_Y = 318;
+    const MIRROR_X1 = 28;
+    const MIRROR_X2 = W - 28;
+    const MIRROR_H = 20;
+    const PX = W / 2;
+    const PY = MIRROR_Y;
+    const RAY_LEN = 160;
+    const NORMAL_UP = 158;
+    const ARC_R = 46;
+    const TORCH_W = 210;
+    const TORCH_H = 198;
+
+    const INC_DURATION = 500;
+    const REF_DURATION = 500;
+    const TOTAL_DURATION = INC_DURATION + REF_DURATION;
+    const DEFAULT_ANGLE = 39;
+
+    const toRad = (d) => (d * Math.PI) / 180;
+    const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+
+    // Pre-load the torch image; the fallback torch draws until it's ready.
+    const torchImg = new Image();
+    torchImg.src = TORCH_IMAGE_URL;
+
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+    const slider = document.getElementById('angle-slider');
+    const angleVal = document.getElementById('angle-val');
+
+    // ── State ──────────────────────────────────────────────────────────────
+    let angle = DEFAULT_ANGLE;
+    let dragging = false;        // dragging the torch
+    let sliderDragging = false;  // dragging the slider thumb
+    let animId = null;           // requestAnimationFrame id
+    // animProgress: 0–1 = incident ray growing, 1–2 = reflected ray growing, 2 = done
+    let animProgress = 2;
+
+    // ── Drawing helpers ────────────────────────────────────────────────────
+    function arrowhead(x, y, rot, size = 14) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-size, -size * 0.45);
+      ctx.lineTo(-size * 0.6, 0);
+      ctx.lineTo(-size, size * 0.45);
+      ctx.closePath();
+      ctx.fillStyle = "#e53e3e";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // ── Main render ────────────────────────────────────────────────────────
+    function render(angleDeg, prog = 2) {
+      ctx.clearRect(0, 0, W, H);
+      const theta = toRad(angleDeg);
+
+      // Full ray endpoints
+      const incX = PX - RAY_LEN * Math.sin(theta);
+      const incY = PY - RAY_LEN * Math.cos(theta);
+      const refX = PX + RAY_LEN * Math.sin(theta);
+      const refY = PY - RAY_LEN * Math.cos(theta);
+
+      const incAngle = Math.atan2(PY - incY, PX - incX);
+      const refAngle = Math.atan2(refY - PY, refX - PX);
+
+      // Incident ray (prog 0→1)
+      const incT = easeOut(Math.min(1, prog));
+      const incTipX = incX + (PX - incX) * incT;
+      const incTipY = incY + (PY - incY) * incT;
+      ctx.strokeStyle = "#e53e3e";
+      ctx.lineWidth = 3.5;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(incX, incY);
+      ctx.lineTo(incTipX, incTipY);
+      ctx.stroke();
+      arrowhead(incTipX, incTipY, incAngle);
+
+      // Reflected ray (prog 1→2)
+      if (prog > 1) {
+        const refT = easeOut(prog - 1);
+        const refTipX = PX + (refX - PX) * refT;
+        const refTipY = PY + (refY - PY) * refT;
+        ctx.strokeStyle = "#e53e3e";
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(PX, PY);
+        ctx.lineTo(refTipX, refTipY);
+        ctx.stroke();
+        arrowhead(refTipX, refTipY, refAngle);
+      }
+
+      // Mirror surface line
+      ctx.strokeStyle = "#555";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(MIRROR_X1, MIRROR_Y);
+      ctx.lineTo(MIRROR_X2, MIRROR_Y);
+      ctx.stroke();
+
+      // Mirror hatch body
+      ctx.fillStyle = "#e0e0e0";
+      ctx.fillRect(MIRROR_X1, MIRROR_Y, MIRROR_X2 - MIRROR_X1, MIRROR_H);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(MIRROR_X1, MIRROR_Y, MIRROR_X2 - MIRROR_X1, MIRROR_H);
+      ctx.clip();
+      ctx.strokeStyle = "#b0b0b0";
+      ctx.lineWidth = 1;
+      for (let x = MIRROR_X1 - MIRROR_H; x <= MIRROR_X2 + 13; x += 13) {
+        ctx.beginPath();
+        ctx.moveTo(x, MIRROR_Y);
+        ctx.lineTo(x + MIRROR_H, MIRROR_Y + MIRROR_H);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Mirror bottom border
+      ctx.strokeStyle = "#bbb";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(MIRROR_X1, MIRROR_Y + MIRROR_H);
+      ctx.lineTo(MIRROR_X2, MIRROR_Y + MIRROR_H);
+      ctx.stroke();
+
+      // Normal line (dashed vertical)
+      ctx.setLineDash([6, 5]);
+      ctx.strokeStyle = "#999";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(PX, PY - NORMAL_UP);
+      ctx.lineTo(PX, PY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Angle arcs & labels — fade in as the reflected ray animates
+      if (prog > 1) {
+        const alpha = Math.min(1, prog - 1);
+        ctx.globalAlpha = alpha;
+
+        ctx.strokeStyle = "#888";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(PX, PY, ARC_R, -Math.PI / 2 - theta, -Math.PI / 2, false);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(PX, PY, ARC_R, -Math.PI / 2, -Math.PI / 2 + theta, false);
+        ctx.stroke();
+
+        ctx.fillStyle = "#333";
+        ctx.font = "bold 16px Caveat";
+        ctx.textAlign = "center";
+        const iMid = -Math.PI / 2 - theta / 2;
+        const rMid = -Math.PI / 2 + theta / 2;
+        const baseR = ARC_R + 26;
+        // For small angles push labels outward horizontally so they don't overlap
+        const extraSep = Math.max(0, (50 - angleDeg) * 1.8);
+        ctx.fillText(
+          "∠i = " + angleDeg + "°",
+          PX + baseR * Math.cos(iMid) - extraSep,
+          PY + baseR * Math.sin(iMid) + 4,
+        );
+        ctx.fillText(
+          "∠r = " + angleDeg + "°",
+          PX + baseR * Math.cos(rMid) + extraSep,
+          PY + baseR * Math.sin(rMid) + 4,
+        );
+
+        ctx.textAlign = "right";
+        ctx.font = "bold 22px Caveat";
+        ctx.fillStyle = "#444";
+        ctx.fillText("Angle = " + angleDeg + "°", W - 16, 28);
+
+        ctx.globalAlpha = 1;
+      }
+
+      // "Normal" label
+      ctx.textAlign = "left";
+      ctx.font = "24px Caveat";
+      ctx.fillStyle = "#aaa";
+      ctx.fillText("Normal", PX + 5, PY - NORMAL_UP + 16);
+
+      // Torch
+      // Torch — only the provided image; nothing is drawn until it loads.
+      if (torchImg.complete && torchImg.naturalWidth > 0) {
+        ctx.save();
+        ctx.translate(incX, incY);
+        ctx.rotate(incAngle - 0.95);
+        ctx.drawImage(torchImg, -TORCH_W + 120, -TORCH_H / 2, TORCH_W, TORCH_H);
+        ctx.restore();
+      }
+    }
+
+    // ── Animation ──────────────────────────────────────────────────────────
+    function startAnimation() {
+      if (animId) cancelAnimationFrame(animId);
+      const startTime = performance.now();
+      function tick(now) {
+        const elapsed = now - startTime;
+        const raw = Math.min(2, (elapsed / TOTAL_DURATION) * 2);
+        animProgress = raw;
+        render(angle, raw);
+        if (raw < 2) animId = requestAnimationFrame(tick);
+        else animId = null;
+      }
+      animId = requestAnimationFrame(tick);
+    }
+
+    function cancelAnim() {
+      if (animId) { cancelAnimationFrame(animId); animId = null; }
+    }
+
+    // ── Pointer helpers ────────────────────────────────────────────────────
+    function torchPos(deg) {
+      const t = toRad(deg);
+      return { x: PX - RAY_LEN * Math.sin(t), y: PY - RAY_LEN * Math.cos(t) };
+    }
+
+    function angleFromPointer(mx, my) {
+      const dx = PX - mx;
+      const dy = PY - my;
+      if (dy <= 0) return null;
+      return Math.max(5, Math.min(80, Math.round((Math.atan2(dx, dy) * 180) / Math.PI)));
+    }
+
+    function scalePointer(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        mx: (clientX - rect.left) * (W / rect.width),
+        my: (clientY - rect.top) * (H / rect.height),
+      };
+    }
+
+    function applyAngle(deg) {
+      angle = deg;
+      slider.value = deg;
+      angleVal.textContent = deg + "°";
+      cancelAnim();
+      // Hide rays while dragging (torch or slider); show fully otherwise
+      render(deg, (dragging || sliderDragging) ? 0 : 2);
+    }
+
+    // ── Canvas mouse events ────────────────────────────────────────────────
+    canvas.addEventListener('mousedown', (e) => {
+      const { mx, my } = scalePointer(e.clientX, e.clientY);
+      const tp = torchPos(angle);
+      if (Math.hypot(mx - tp.x, my - tp.y) < 90) {
+        dragging = true;
+        cancelAnim();
+        render(angle, 0);
+      }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      const { mx, my } = scalePointer(e.clientX, e.clientY);
+      if (dragging) {
+        const deg = angleFromPointer(mx, my);
+        if (deg !== null) applyAngle(deg);
+      } else {
+        const tp = torchPos(angle);
+        canvas.style.cursor = Math.hypot(mx - tp.x, my - tp.y) < 90 ? "grab" : "default";
+      }
+    });
+
+    function endTorchDrag() {
+      if (dragging) {
+        dragging = false;
+        canvas.style.cursor = "default";
+        startAnimation();
+      }
+    }
+    canvas.addEventListener('mouseup', endTorchDrag);
+    canvas.addEventListener('mouseleave', endTorchDrag);
+
+    // ── Canvas touch events ────────────────────────────────────────────────
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      const { mx, my } = scalePointer(t.clientX, t.clientY);
+      const tp = torchPos(angle);
+      if (Math.hypot(mx - tp.x, my - tp.y) < 90) {
+        dragging = true;
+        cancelAnim();
+        render(angle, 0);
+      }
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!dragging) return;
+      const t = e.touches[0];
+      const { mx, my } = scalePointer(t.clientX, t.clientY);
+      const deg = angleFromPointer(mx, my);
+      if (deg !== null) applyAngle(deg);
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', () => {
+      if (dragging) {
+        dragging = false;
+        startAnimation();
+      }
+    });
+
+    // ── Slider events ──────────────────────────────────────────────────────
+    slider.addEventListener('input', (e) => applyAngle(parseInt(e.target.value, 10)));
+    function sliderGrab() {
+      sliderDragging = true;
+      cancelAnim();
+      render(angle, 0);
+    }
+    function sliderRelease() {
+      sliderDragging = false;
+      startAnimation();
+    }
+    slider.addEventListener('mousedown', sliderGrab);
+    slider.addEventListener('mouseup', sliderRelease);
+    slider.addEventListener('touchstart', sliderGrab, { passive: true });
+    slider.addEventListener('touchend', sliderRelease);
+
+    // ── Reset / Exit ───────────────────────────────────────────────────────
+    function resetSim() {
+      cancelAnim();
+      angle = DEFAULT_ANGLE;
+      slider.value = DEFAULT_ANGLE;
+      angleVal.textContent = DEFAULT_ANGLE + "°";
+      animProgress = 2;
+      render(angle, 2);
+    }
+
+    function exitSim() {
+      try { window.close(); } catch (_) { /* ignore */ }
+      setTimeout(() => {
+        if (!window.closed) {
+          if (history.length > 1) history.back();
+          else window.location.href = '/';
+        }
+      }, 100);
+    }
+
+    window.resetSim = resetSim;
+    window.exitSim = exitSim;
+
+    // ── Splash ─────────────────────────────────────────────────────────────
+    const startBtn = document.getElementById('sim-start-btn');
+    const splashSpinner = document.getElementById('splash-spinner');
+    const splashBtnLabel = document.getElementById('splash-btn-label');
+    const splashStatus = document.getElementById('splash-status');
+
+    // The Start button stays disabled until the torch image has loaded —
+    // the simulation isn't shown without its only artwork.
+    function enableStart() {
+      if (!startBtn.disabled) return;
+      splashSpinner.style.display = 'none';
+      splashBtnLabel.innerHTML = '&#9654;&nbsp; Start Simulation';
+      splashStatus.textContent = 'Ready to begin';
+      startBtn.disabled = false;
+    }
+
+    function refreshThumb() {
+      try { document.getElementById('splash-thumb').src = canvas.toDataURL(); }
+      catch (_) { /* tainted by cross-origin torch image — leave blank */ }
+    }
+
+    startBtn.addEventListener('click', () => {
+      document.getElementById('sim-splash').classList.add('hidden');
+      // Replay the incident → reflected animation as the entrance moment.
+      animProgress = 2;
+      render(angle, 2);
+      startAnimation();
+    }, { once: true });
+
+    // ── Initial paint ──────────────────────────────────────────────────────
+    render(angle, 2);
+    refreshThumb();
+
+    if (torchImg.complete && torchImg.naturalWidth > 0) {
+      // Already cached — paint with the torch and unlock immediately.
+      render(angle, animProgress);
+      enableStart();
+    } else {
+      torchImg.addEventListener('load', () => {
+        render(angle, animProgress);
+        refreshThumb();
+        enableStart();
+      }, { once: true });
+      // Safety net: a CDN hiccup shouldn't permanently trap the user.
+      torchImg.addEventListener('error', enableStart, { once: true });
+      setTimeout(enableStart, 12000);
+    }
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => render(angle, animProgress));
+    }
+  </script>
+</body>
+
+</html>
