@@ -9,6 +9,7 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, 'index.html'),
         displacement: path.resolve(__dirname, 'src/simulations/displacement_final.html'),
+        reflection: path.resolve(__dirname, 'src/simulations/reflection_of_light.html'),
       },
     },
   },
